@@ -1,4 +1,4 @@
-# BTCnews.co.za - Bitcoin Price Dashboard
+# www.btcnews.co.za - Bitcoin Price Dashboard
 
 A sleek, modern dark-mode dashboard for real-time Bitcoin price tracking with ZAR conversion and comprehensive market data.
 
@@ -65,7 +65,7 @@ The dashboard uses **SQLite** to store price snapshots automatically:
 
 ### Database Location
 ```
-BTCnews.co.za/
+www.btcnews.co.za/
 ├── data/
 │   ├── bitcoin.db        # Main database file
 │   ├── bitcoin.db-shm    # Shared memory file (WAL mode)
@@ -139,5 +139,5 @@ Note: SQLite database will persist in the `/data` directory. For serverless depl
 
 ## License
 
-© 2025 BTCnews.co.za - All rights reserved
+© 2025 www.btcnews.co.za - All rights reserved
 # www.btcnews.co.za
