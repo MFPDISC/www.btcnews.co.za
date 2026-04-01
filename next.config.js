@@ -5,6 +5,8 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'export',
+  basePath: '/www.btcnews.co.za',
+  assetPrefix: '/www.btcnews.co.za/',
   experimental: {
     outputFileTracingRoot: undefined,
   },
