@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  btcnews:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-Platinum@0181}
+      - NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID:-GA_MEASUREMENT_ID}
+      - DATABASE_URL=./data/bitcoin.db
+      - COINGECKO_API_URL=https://api.coingecko.com/api/v3
+      - BINANCE_API_URL=https://api.binance.com/api/v3
+    volumes:
+      - btc_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  btc_data:
+    driver: local

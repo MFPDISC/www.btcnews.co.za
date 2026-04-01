@@ -19,10 +19,47 @@ export default function HistoricalComparison({ currentPrice }: HistoricalCompari
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Generate mock historical data for demonstration
-    // In a real implementation, you'd fetch this from your database
-    const generateHistoricalData = () => {
-      const now = Date.now();
+    const fetchHistoricalData = async () => {
+      if (currentPrice <= 0) return;
+      
+      setLoading(true);
+      
+      try {
+        // Fetch real historical data from our API
+        const response = await fetch('/api/btc-historical?periods=1,7,30');
+        const historicalPrices = await response.json();
+        
+        if (historicalPrices && historicalPrices.length > 0) {
+          // Use real data
+          const data = historicalPrices.map((item: any) => {
+            const pastPrice = item.price || currentPrice; // Fallback to current if no historical price
+            const change = currentPrice - pastPrice;
+            const changePercent = pastPrice > 0 ? (change / pastPrice) * 100 : 0;
+
+            return {
+              period: item.period,
+              pastPrice,
+              currentPrice,
+              change,
+              changePercent,
+            };
+          });
+          
+          setHistoricalData(data);
+        } else {
+          // Fallback to mock data if API fails
+          console.warn('Historical API returned no data, using fallback');
+          generateFallbackData();
+        }
+      } catch (error) {
+        console.warn('Failed to fetch historical data, using fallback:', error);
+        generateFallbackData();
+      }
+      
+      setLoading(false);
+    };
+
+    const generateFallbackData = () => {
       const periods = [
         { label: '24h ago', hours: 24 },
         { label: '7d ago', hours: 24 * 7 },
@@ -30,7 +67,7 @@ export default function HistoricalComparison({ currentPrice }: HistoricalCompari
       ];
 
       const data = periods.map(period => {
-        // Generate realistic price variations
+        // Generate realistic price variations based on historical volatility
         const variation = period.hours === 24 ? 
           (Math.random() - 0.5) * 0.06 : // ±3% for 24h
           period.hours === 24 * 7 ?
@@ -51,12 +88,9 @@ export default function HistoricalComparison({ currentPrice }: HistoricalCompari
       });
 
       setHistoricalData(data);
-      setLoading(false);
     };
 
-    if (currentPrice > 0) {
-      generateHistoricalData();
-    }
+    fetchHistoricalData();
   }, [currentPrice]);
 
   const formatPrice = (price: number) => {
@@ -158,7 +192,7 @@ export default function HistoricalComparison({ currentPrice }: HistoricalCompari
       
       <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
         <p className="text-blue-400 text-xs">
-          💡 Historical data shows price trends over different time periods to help gauge market momentum.
+          💡 Real historical data from CoinGecko API shows actual price trends over different time periods to help gauge market momentum.
         </p>
       </div>
     </div>

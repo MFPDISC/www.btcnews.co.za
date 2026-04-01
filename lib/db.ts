@@ -136,3 +136,71 @@ export function closeDb() {
     db = null;
   }
 }
+
+// Analytics functions
+export function saveAnalyticsEvent(event: {
+  type: string;
+  data: any;
+}) {
+  const database = getDb();
+  
+  // Create analytics table if it doesn't exist
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      data TEXT NOT NULL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  const stmt = database.prepare(`
+    INSERT INTO analytics_events (type, data)
+    VALUES (?, ?)
+  `);
+  
+  stmt.run(event.type, JSON.stringify(event.data));
+}
+
+export function getAnalyticsStats(days: number = 7) {
+  const database = getDb();
+  
+  // Get visitor stats
+  const visitorStats = database.prepare(`
+    SELECT 
+      COUNT(*) as total_visits,
+      COUNT(DISTINCT json_extract(data, '$.ip')) as unique_visitors
+    FROM analytics_events 
+    WHERE type = 'visit' 
+    AND timestamp >= datetime('now', '-${days} days')
+  `).get();
+  
+  // Get referral clicks
+  const referralStats = database.prepare(`
+    SELECT 
+      json_extract(data, '$.exchange') as exchange,
+      COUNT(*) as clicks
+    FROM analytics_events 
+    WHERE type = 'referral_click' 
+    AND timestamp >= datetime('now', '-${days} days')
+    GROUP BY json_extract(data, '$.exchange')
+  `).all();
+  
+  // Get page views
+  const pageStats = database.prepare(`
+    SELECT 
+      json_extract(data, '$.page') as page,
+      COUNT(*) as views
+    FROM analytics_events 
+    WHERE type = 'visit' 
+    AND timestamp >= datetime('now', '-${days} days')
+    GROUP BY json_extract(data, '$.page')
+    ORDER BY views DESC
+  `).all();
+  
+  return {
+    visitors: visitorStats,
+    referrals: referralStats,
+    pages: pageStats,
+  };
+}
